@@ -22,7 +22,7 @@ await queueClient.CreateIfNotExistsAsync();
 
 /// send string
 #region stringMessage
-SendReceipt receipt = await queueClient.SendMessageAsync("Message one");
+SendReceipt receipt = await queueClient.SendMessageAsync("Message one", timeToLive: TimeSpan.FromDays(1));
 /// Use receipt to delete or update the message
 //await queueClient.DeleteMessageAsync(receipt.MessageId, receipt.PopReceipt);
 #endregion
