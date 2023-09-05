@@ -14,7 +14,11 @@ var queueName = "demoqueueriyaz";
 
 var credential = new StorageSharedKeyCredential(storageAccountName, accountKey);
 var queueClient = new QueueClient(
-    new Uri($"https://{storageAccountName}.queue.core.windows.net/{queueName}"), credential
+    new Uri($"https://{storageAccountName}.queue.core.windows.net/{queueName}"), credential, 
+    new QueueClientOptions
+    {
+        MessageEncoding = QueueMessageEncoding.Base64
+    }
     );
 
 /// create queue
@@ -22,7 +26,7 @@ await queueClient.CreateIfNotExistsAsync();
 
 /// send string
 #region stringMessage
-SendReceipt receipt = await queueClient.SendMessageAsync("Message one", timeToLive: TimeSpan.FromDays(1));
+SendReceipt receipt = await queueClient.SendMessageAsync("Messageone", timeToLive: TimeSpan.FromDays(1));
 /// Use receipt to delete or update the message
 //await queueClient.DeleteMessageAsync(receipt.MessageId, receipt.PopReceipt);
 #endregion
@@ -34,7 +38,7 @@ SendReceipt receipt = await queueClient.SendMessageAsync("Message one", timeToLi
 
 foreach (var id in Enumerable.Range(1, 10))
 {
-    var addEmployee = new AddEmployeeDto(id.ToString(), "Riyaz", "Kittur");
+    var addEmployee = new AddEmployeeDto(id.ToString(), $"Riyaz{id}", "Kittur");
     var message = JsonSerializer.Serialize(addEmployee);
     await queueClient.SendMessageAsync(message);
 }
@@ -60,14 +64,15 @@ foreach (var message in messages1)
         var dto = JsonSerializer.Deserialize<AddEmployeeDto>(message.MessageText);
         Console.WriteLine($" Receieved Dto with Id : {dto.Id}");
     }
-    catch(JsonException)
+    catch (JsonException)
     {
         Console.WriteLine("Message is not in expected format");
     }
-    
+
 }
 QueueMessage[] messages2 = await queueClient.ReceiveMessagesAsync(maxMessages: 10);
 Console.WriteLine("Received Message count {0} for second call", messages2.Length);
+Console.WriteLine("Waiting for 10 seconds");
 await Task.Delay(TimeSpan.FromSeconds(10));
 QueueMessage[] messages3 = await queueClient.ReceiveMessagesAsync(maxMessages: 10);
 Console.WriteLine("Received Message count {0} after 10 sec delay", messages3.Length);
@@ -78,3 +83,5 @@ foreach (var message in messages3)
     Console.WriteLine(message.MessageText);
 }
 #endregion
+
+
